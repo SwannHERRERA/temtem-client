@@ -5,31 +5,43 @@
         <h1 class="title">Login</h1>
       </div>
       <div class="card-body">
-        <form>
+        <form @submit.prevent="onSubmit">
           <div class="mb-3">
             <label for="email">email</label>
             <input
               id="email"
               v-model.trim="$v.form.email.$model"
               type="text"
-              class="form-control"
+              :class="[{ 'is-invalid': $v.form.email.$error }, 'form-control']"
             />
+            <div
+              v-if="submitted && !$v.form.email.$error"
+              class="invalid-feedback"
+            >
+              <span v-if="!$v.form.email.required">Email is required</span>
+              <span v-if="!$v.form.email.email">Email is invalid</span>
+            </div>
           </div>
           <div class="mb-3">
             <label for="password">password</label>
             <input
               id="password"
               v-model="$v.form.password.$model"
-              type="text"
+              type="password"
               :class="[
                 { 'is-invalid': $v.form.password.$error },
                 'form-control',
               ]"
             />
-            <div class="invalid-feedback">This field is required</div>
+            <div
+              v-if="submitted && !$v.form.password.required"
+              class="invalid-feedback"
+            >
+              Password is required
+            </div>
           </div>
           <p class="text-center">
-            <button class="btn btn-primary">Se connecter</button>
+            <button type="submit" class="btn btn-primary">Se connecter</button>
           </p>
         </form>
       </div>
@@ -47,6 +59,7 @@ export default {
         email: '',
         password: '',
       },
+      submitted: false,
     }
   },
   validations: {
@@ -58,6 +71,23 @@ export default {
       password: {
         required,
       },
+    },
+  },
+  methods: {
+    async onSubmit() {
+      this.submitted = true
+      // stop here if form is invalid
+      this.$v.$touch()
+      if (this.$v.$invalid) {
+        this.submitted = false
+        return
+      }
+      const result = await this.$axios.$post(
+        'http://localhost:5000/api/v1/auth/login',
+        this.form
+      )
+
+      alert('SUCCESS!! :-)\n\n' + JSON.stringify(result))
     },
   },
 }
